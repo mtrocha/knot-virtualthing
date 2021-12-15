@@ -1,7 +1,7 @@
 /**
  * This file is part of the KNOT Project
  *
- * Copyright (c) 2020, CESAR. All rights reserved.
+ * Copyright (c) 2021, CESAR. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
