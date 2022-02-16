@@ -199,9 +199,12 @@ int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
 
 
 	do {
-		rc = plc_tag_read(data_item->tag, DATA_TIMEOUT);
+		rc = plc_tag_status(data_item->tag);
 	} while (rc == PLCTAG_STATUS_PENDING);
 
+	if (rc == PLCTAG_STATUS_OK) {
+		rc = plc_tag_read(data_item->tag, DATA_TIMEOUT);
+	}
 
 	if (rc == PLCTAG_STATUS_OK) {
 		elem_size = plc_tag_get_int_attribute(data_item->tag,
@@ -271,7 +274,11 @@ int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
 	} else {
 		l_error("Unable to read the data! Got error code %d: %s\n",
 			rc, plc_tag_decode_error(rc));
-		on_disconnected(NULL);
+		iface_ethernet_ip_stop();
+		l_hashmap_foreach(thing_ethernet_ip.data_items,
+				foreach_data_item_ethernet_ip, &rc);
+		if (rc)
+			l_error("error connecting to Ethernet/Ip");
 	}
 
 	return rc;
