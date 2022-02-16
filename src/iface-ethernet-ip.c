@@ -185,8 +185,7 @@ static void attempt_connect(struct l_timeout *to, void *user_data)
 	return;
 
 retry:
-	iface_ethernet_ip_stop();
-	l_timeout_modify(to, RECONNECT_TIMEOUT);
+	on_disconnected(NULL);
 }
 
 int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
