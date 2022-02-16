@@ -113,7 +113,10 @@ static int connect_ethernet_ip(struct knot_data_item *data_item)
 		return -EINVAL;
 	}
 
-	rc = plc_tag_status(data_item->tag);
+	do {
+		rc = plc_tag_status(data_item->tag);
+	} while (rc == PLCTAG_STATUS_PENDING);
+
 	if (rc != PLCTAG_STATUS_OK) {
 		l_error("Error setting up tag internal state. %s",
 			plc_tag_decode_error(
@@ -276,12 +279,12 @@ int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
 
 		memcpy(&data_item->current_val, &tmp, sizeof(tmp));
 
-		plc_tag_destroy(data_item->tag);
+
 	} else {
 		l_error("Unable to read the data! Got error code %d: %s\n",
 			rc, plc_tag_decode_error(rc));
 	}
-
+	plc_tag_destroy(data_item->tag);
 	return rc;
 }
 
