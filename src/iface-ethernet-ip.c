@@ -69,33 +69,33 @@ static void parse_tag_data_item(struct knot_data_item *data_item)
 	       (const char *)string_tag_path_aux);
 }
 
-static int verify_tag_name_created(struct knot_data_item *data_item)
-{
-	struct knot_data_item *data_item_aux;
-	int i;
-	int rc = -1;
+// static int verify_tag_name_created(struct knot_data_item *data_item)
+// {
+// 	struct knot_data_item *data_item_aux;
+// 	int i;
+// 	int rc = -1;
 
-	for (i = 0; i < data_item->sensor_id; i++) {
-		int return_aux;
+// 	for (i = 0; i < data_item->sensor_id; i++) {
+// 		int return_aux;
 
-		data_item_aux = l_hashmap_lookup(thing_ethernet_ip.data_items,
-						 L_INT_TO_PTR(i));
-		if (!data_item_aux)
-			rc = -EINVAL;
+// 		data_item_aux = l_hashmap_lookup(thing_ethernet_ip.data_items,
+// 						 L_INT_TO_PTR(i));
+// 		if (!data_item_aux)
+// 			rc = -EINVAL;
 
-		return_aux = strcmp(
-			data_item_aux->tag_name,
-			data_item->tag_name);
-		if (!return_aux) {
-			data_item->tag =
-				data_item_aux->tag;
-			rc = 0;
-			break;
-		}
-	}
+// 		return_aux = strcmp(
+// 			data_item_aux->tag_name,
+// 			data_item->tag_name);
+// 		if (!return_aux) {
+// 			data_item->tag =
+// 				data_item_aux->tag;
+// 			rc = 0;
+// 			break;
+// 		}
+// 	}
 
-	return rc;
-}
+// 	return rc;
+// }
 
 static int connect_ethernet_ip(struct knot_data_item *data_item)
 {
@@ -124,38 +124,38 @@ static int connect_ethernet_ip(struct knot_data_item *data_item)
 	return rc;
 }
 
-static void foreach_data_item_ethernet_ip(const void *key, void *value,
-				      void *user_data)
-{
-	struct knot_data_item *data_item = value;
-	int *rc = user_data;
-	int return_aux = 0;
+// static void foreach_data_item_ethernet_ip(const void *key, void *value,
+// 				      void *user_data)
+// {
+// 	struct knot_data_item *data_item = value;
+// 	int *rc = user_data;
+// 	int return_aux = 0;
 
-	return_aux = verify_tag_name_created(data_item);
-	if (return_aux) {
-		parse_tag_data_item(data_item);
-		return_aux = connect_ethernet_ip(data_item);
-		if (return_aux) {
-			plc_tag_destroy(
-				data_item->tag);
-			*rc = -EINVAL;
-		}
-	}
-}
+// 	// return_aux = verify_tag_name_created(data_item);
+// 	// if (return_aux) {
+// 		parse_tag_data_item(data_item);
+// 		return_aux = connect_ethernet_ip(data_item);
+// 		if (return_aux) {
+// 			plc_tag_destroy(
+// 				data_item->tag);
+// 			*rc = -EINVAL;
+// 		}
+// 	// }
+// }
 
-static void foreach_stop_ethernet_ip(const void *key, void *value,
-				      void *user_data)
-{
-	struct knot_data_item *data_item = value;
-	int *rc = user_data;
+// static void foreach_stop_ethernet_ip(const void *key, void *value,
+// 				      void *user_data)
+// {
+// 	struct knot_data_item *data_item = value;
+// 	int *rc = user_data;
 
-	*rc = plc_tag_status(data_item->tag);
-	if (rc != PLCTAG_STATUS_OK) {
-		l_error("Error setting up tag internal state. %s\n",
-			plc_tag_decode_error(*rc));
-		plc_tag_destroy(data_item->tag);
-	}
-}
+// 	*rc = plc_tag_status(data_item->tag);
+// 	if (rc != PLCTAG_STATUS_OK) {
+// 		l_error("Error setting up tag internal state. %s\n",
+// 			plc_tag_decode_error(*rc));
+// 		plc_tag_destroy(data_item->tag);
+// 	}
+// }
 
 static void on_disconnected(void *user_data)
 {
@@ -168,24 +168,24 @@ static void on_disconnected(void *user_data)
 
 static void attempt_connect(struct l_timeout *to, void *user_data)
 {
-	int rc = 0;
+	// int rc = 0;
 
 	l_debug("Trying to connect to Ethernet/Ip");
 
-	l_hashmap_foreach(thing_ethernet_ip.data_items,
-			  foreach_data_item_ethernet_ip, &rc);
-	if (rc) {
-		l_error("error connecting to Ethernet/Ip");
-		goto retry;
-	}
+	// l_hashmap_foreach(thing_ethernet_ip.data_items,
+	// 		  foreach_data_item_ethernet_ip, &rc);
+	// if (rc) {
+	// 	l_error("error connecting to Ethernet/Ip");
+	// 	goto retry;
+	// }
 
 	if (conn_cb)
 		conn_cb(user_data);
 
 	return;
 
-retry:
-	on_disconnected(NULL);
+// retry:
+// 	on_disconnected(NULL);
 }
 
 int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
@@ -196,10 +196,16 @@ int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
 
 	memset(&tmp, 0, sizeof(tmp));
 
+	parse_tag_data_item(data_item);
+	rc = connect_ethernet_ip(data_item);
+	if (rc) {
+		plc_tag_destroy(data_item->tag);
+		return rc;
+	}
 
-	do {
-		rc = plc_tag_status(data_item->tag);
-	} while (rc == PLCTAG_STATUS_PENDING);
+	// do {
+	// 	rc = plc_tag_status(data_item->tag);
+	// } while (rc == PLCTAG_STATUS_PENDING);
 
 	if (rc == PLCTAG_STATUS_OK) {
 		rc = plc_tag_read(data_item->tag, DATA_TIMEOUT);
@@ -270,14 +276,11 @@ int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
 		}
 
 		memcpy(&data_item->current_val, &tmp, sizeof(tmp));
+
+		plc_tag_destroy(data_item->tag);
 	} else {
 		l_error("Unable to read the data! Got error code %d: %s\n",
 			rc, plc_tag_decode_error(rc));
-		iface_ethernet_ip_stop();
-		l_hashmap_foreach(thing_ethernet_ip.data_items,
-				foreach_data_item_ethernet_ip, &rc);
-		if (rc)
-			l_error("error connecting to Ethernet/Ip");
 	}
 
 	return rc;
@@ -311,11 +314,16 @@ int iface_ethernet_ip_start(struct knot_thing thing,
 
 void iface_ethernet_ip_stop(void)
 {
-	int rc = 0;
+	// int rc = 0;
 
-	l_hashmap_foreach(thing_ethernet_ip.data_items,
-			  foreach_stop_ethernet_ip, &rc);
-	if (rc)
-		l_error("error disconnect to Ethernet/Ip");
+	l_timeout_remove(connect_to);
+	connect_to = NULL;
+
+	on_disconnected(NULL);
+
+	// l_hashmap_foreach(thing_ethernet_ip.data_items,
+	// 		  foreach_stop_ethernet_ip, &rc);
+	// if (rc)
+	// 	l_error("error disconnect to Ethernet/Ip");
 
 }
