@@ -124,24 +124,24 @@ static int connect_ethernet_ip(struct knot_data_item *data_item)
 	return rc;
 }
 
-// static void foreach_data_item_ethernet_ip(const void *key, void *value,
-// 				      void *user_data)
-// {
-// 	struct knot_data_item *data_item = value;
-// 	int *rc = user_data;
-// 	int return_aux = 0;
+static void foreach_data_item_ethernet_ip(const void *key, void *value,
+				      void *user_data)
+{
+	struct knot_data_item *data_item = value;
+	// int *rc = user_data;
+	// int return_aux = 0;
 
-// 	// return_aux = verify_tag_name_created(data_item);
-// 	// if (return_aux) {
-// 		parse_tag_data_item(data_item);
-// 		return_aux = connect_ethernet_ip(data_item);
-// 		if (return_aux) {
-// 			plc_tag_destroy(
-// 				data_item->tag);
-// 			*rc = -EINVAL;
-// 		}
-// 	// }
-// }
+	// return_aux = verify_tag_name_created(data_item);
+	// if (return_aux) {
+		parse_tag_data_item(data_item);
+		// return_aux = connect_ethernet_ip(data_item);
+		// if (return_aux) {
+		// 	plc_tag_destroy(
+		// 		data_item->tag);
+		// 	*rc = -EINVAL;
+		// }
+	// }
+}
 
 // static void foreach_stop_ethernet_ip(const void *key, void *value,
 // 				      void *user_data)
@@ -168,16 +168,15 @@ static void on_disconnected(void *user_data)
 
 static void attempt_connect(struct l_timeout *to, void *user_data)
 {
-	// int rc = 0;
+	int rc = 0;
 
 	l_debug("Trying to connect to Ethernet/Ip");
 
-	// l_hashmap_foreach(thing_ethernet_ip.data_items,
-	// 		  foreach_data_item_ethernet_ip, &rc);
-	// if (rc) {
-	// 	l_error("error connecting to Ethernet/Ip");
-	// 	goto retry;
-	// }
+	l_hashmap_foreach(thing_ethernet_ip.data_items,
+			  foreach_data_item_ethernet_ip, &rc);
+	if (rc) {
+		l_error("error connecting to Ethernet/Ip");
+	}
 
 	if (conn_cb)
 		conn_cb(user_data);
@@ -196,7 +195,7 @@ int iface_ethernet_ip_read_data(struct knot_data_item *data_item)
 
 	memset(&tmp, 0, sizeof(tmp));
 
-	parse_tag_data_item(data_item);
+	// parse_tag_data_item(data_item);
 	rc = connect_ethernet_ip(data_item);
 	if (rc) {
 		plc_tag_destroy(data_item->tag);
